@@ -1,0 +1,779 @@
+"use client";
+
+import { useState, useEffect, useContext } from "react";
+import { FiPlus, FiEdit2, FiTrash2, FiUser, FiUserX } from "react-icons/fi";
+import Modal from "../../components/Modal";
+import { userApi } from "../../api/userApi";
+import { tenantApi } from "../../api/tenantApi";
+import { requestApprovalApi } from "../../api/requestApprovalApi";
+import { AuthContext } from "../../context/AuthContext";
+import Loader from "./Loader";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Select } from "../../components/ui/select";
+import { Checkbox } from "../../components/ui/checkbox";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../../components/ui/table";
+
+export default function Users() {
+  const { user, tenant, portals } = useContext(AuthContext);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "operator",
+    portalName: "", // New field for admin portal name
+    phoneNumber: "",
+    address: "",
+    city: "",
+    country: "",
+    portalAccessIds: [],
+    customPermissions: {
+      dashboard: false,
+      projects: false,
+      plots: false,
+      customers: false,
+      suppliers: false,
+      items: false,
+      chartOfAccounts: false,
+      salesInvoice: false,
+      purchaseEntry: false,
+      cashPayment: false,
+      bankPayment: false,
+      reports: false,
+    },
+  });
+
+  // Fetch users on component mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await userApi.getAll();
+      if (response.success) {
+        setUsers(response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setError(err.message || "Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const roles = [
+    { value: "admin", label: "Admin", description: "Full system access" },
+    {
+      value: "operator",
+      label: "Operator",
+      description: "Data entry and operations",
+    },
+    {
+      value: "custom",
+      label: "Custom User",
+      description: "Limited rights (configurable)",
+    },
+  ];
+
+  const availablePermissions = [
+    { key: "dashboard", label: "Dashboard" },
+    { key: "projects", label: "Projects" },
+    { key: "plots", label: "Plots/Properties" },
+    { key: "customers", label: "Customers" },
+    { key: "suppliers", label: "Suppliers" },
+    { key: "items", label: "Item List" },
+    { key: "chartOfAccounts", label: "Chart of Accounts" },
+    { key: "salesInvoice", label: "Sales Invoice" },
+    { key: "purchaseEntry", label: "Purchase Entry" },
+    { key: "cashPayment", label: "Cash Payment" },
+    { key: "bankPayment", label: "Bank Payment" },
+    { key: "reports", label: "Reports" },
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    try {
+      if (formData.role === "admin" && !editingUser) {
+        // Creating a new admin with portal
+        if (!formData.portalName) {
+          setError("Portal name is required for Admin users");
+          setSubmitting(false);
+          return;
+        }
+
+        // Register tenant/portal first
+        const tenantResponse = await tenantApi.register({
+          portalName: formData.portalName,
+          email: formData.email,
+          password: formData.password,
+          adminName: formData.name,
+          phoneNumber: formData.phoneNumber,
+          address: formData.address,
+          city: formData.city,
+          country: formData.country,
+        });
+
+        if (tenantResponse.success) {
+          alert(
+            `Portal "${formData.portalName}" created successfully! Admin can now login.`
+          );
+          await fetchUsers();
+          resetForm();
+        }
+      } else {
+        // Creating operator or custom user OR editing existing user
+        const userData = {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          portalAccessIds: formData.portalAccessIds,
+          customPermissions:
+            formData.role === "custom" ? formData.customPermissions : null,
+        };
+
+        // Only include password if it's provided (for new users or when updating)
+        if (formData.password) {
+          userData.password = formData.password;
+        }
+
+        // Check if user is admin - admins can create/edit directly
+        if (user?.role === "admin") {
+          if (editingUser) {
+            // Update existing user
+            const response = await userApi.update(editingUser._id, userData);
+            if (response.success) {
+              await fetchUsers(); // Refresh the list
+              resetForm();
+            }
+          } else {
+            // Create new user - password is required
+            if (!formData.password) {
+              setError("Password is required for new users");
+              setSubmitting(false);
+              return;
+            }
+            const response = await userApi.create(userData);
+            if (response.success) {
+              await fetchUsers(); // Refresh the list
+              resetForm();
+            }
+          }
+        } else {
+          // Non-admin users must submit a request
+          // For new users, password is still required
+          if (!editingUser && !formData.password) {
+            setError("Password is required for new users");
+            setSubmitting(false);
+            return;
+          }
+
+          const requestData = {
+            requestType: editingUser ? "edit_user" : "create_user",
+            requestData: userData,
+            entityId: editingUser?._id || null,
+          };
+
+          const response = await requestApprovalApi.createRequest(requestData);
+          if (response.success) {
+            alert(
+              "Your request has been submitted to the admin for approval. You can view the status in 'My Requests' section."
+            );
+            resetForm();
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error saving user:", err);
+      setError(err.message || "Failed to save user");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      password: "",
+      role: user.role,
+      portalName: "",
+      phoneNumber: "",
+      address: "",
+      city: "",
+      country: "",
+      portalAccessIds: user.portalAccessIds || [],
+      customPermissions: user.customPermissions || {
+        dashboard: false,
+        projects: false,
+        plots: false,
+        customers: false,
+        suppliers: false,
+        items: false,
+        chartOfAccounts: false,
+        salesInvoice: false,
+        purchaseEntry: false,
+        cashPayment: false,
+        bankPayment: false,
+        reports: false,
+      },
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        const response = await userApi.delete(userId);
+        if (response.success) {
+          await fetchUsers(); // Refresh the list
+        }
+      } catch (err) {
+        console.error("Error deleting user:", err);
+        setError(err.message || "Failed to delete user");
+      }
+    }
+  };
+
+  const toggleUserStatus = async (userId) => {
+    try {
+      const response = await userApi.toggleStatus(userId);
+      if (response.success) {
+        await fetchUsers(); // Refresh the list
+      }
+    } catch (err) {
+      console.error("Error toggling user status:", err);
+      setError(err.message || "Failed to toggle user status");
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      role: "operator",
+      portalName: "",
+      phoneNumber: "",
+      address: "",
+      city: "",
+      country: "",
+      portalAccessIds: tenant?.tenantId ? [tenant.tenantId] : [],
+      customPermissions: {
+        dashboard: false,
+        projects: false,
+        plots: false,
+        customers: false,
+        suppliers: false,
+        items: false,
+        chartOfAccounts: false,
+        salesInvoice: false,
+        purchaseEntry: false,
+        cashPayment: false,
+        bankPayment: false,
+        reports: false,
+      },
+    });
+    setEditingUser(null);
+    setShowForm(false);
+    setError("");
+  };
+
+  const togglePermission = (permissionKey) => {
+    setFormData({
+      ...formData,
+      customPermissions: {
+        ...formData.customPermissions,
+        [permissionKey]: !formData.customPermissions[permissionKey],
+      },
+    });
+  };
+
+  const getRoleBadgeColor = (role) => {
+    switch (role) {
+      case "admin":
+        return "bg-red-100 text-red-800";
+      case "operator":
+        return "bg-blue-100 text-blue-800";
+      case "custom":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex justify-between items-center">
+          <span>{error}</span>
+          <button
+            onClick={() => setError("")}
+            className="text-red-700 hover:text-red-900"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Users Management
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage user accounts, roles, and permissions (Admin Only)
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            resetForm();
+            setShowForm(!showForm);
+          }}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition"
+        >
+          <FiPlus className="w-5 h-5" />
+          Add User
+        </button>
+      </div>
+
+      <Modal
+        isOpen={showForm}
+        onClose={resetForm}
+        title={editingUser ? "Edit User" : "Add New User"}
+        size="xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Full Name *
+              </label>
+              <input
+                type="text"
+                placeholder="Enter full name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Email *
+              </label>
+              <input
+                type="email"
+                placeholder="Enter email address"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Password {!editingUser && "*"}
+              </label>
+              <input
+                type="password"
+                placeholder={
+                  editingUser ? "Leave blank to keep current" : "Enter password"
+                }
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                required={!editingUser}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Role & Permissions *
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {roles.map((role) => (
+                <label
+                  key={role.value}
+                  className={`relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition ${
+                    formData.role === role.value
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={role.value}
+                    checked={formData.role === role.value}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role: e.target.value })
+                    }
+                    className="sr-only"
+                  />
+                  <span className="font-semibold text-foreground">
+                    {role.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground mt-1">
+                    {role.description}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Portal Information Section - Only show when Admin is selected and not editing */}
+          {formData.role === "admin" && !editingUser && (
+            <div className="border border-border rounded-lg p-4 bg-muted/30">
+              <h3 className="text-sm font-semibold text-foreground mb-4">
+                Portal Registration Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Portal Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., BUNYAN AL MARSOOS CONSTRUCTIONS"
+                    value={formData.portalName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, portalName: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={formData.phoneNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phoneNumber: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter address"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter city"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter country"
+                  value={formData.country}
+                  onChange={(e) =>
+                    setFormData({ ...formData, country: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground mt-3">
+                This admin will get access to their own portal with isolated
+                data.
+              </p>
+            </div>
+          )}
+          {/* Workspace Portal Access Config Section */}
+          {formData.role !== "admin" && portals && portals.length > 1 && (
+            <div className="border border-border rounded-lg p-4 bg-muted/30">
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Workspace Access Controls
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {portals.map((p) => (
+                  <label
+                    key={p.tenantId}
+                    className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-background transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.portalAccessIds.includes(p.tenantId)}
+                      onChange={() => {
+                        const exists = formData.portalAccessIds.includes(p.tenantId);
+                        const updated = exists
+                          ? formData.portalAccessIds.filter(id => id !== p.tenantId)
+                          : [...formData.portalAccessIds, p.tenantId];
+                        setFormData({ ...formData, portalAccessIds: updated });
+                      }}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-foreground">
+                        {p.portalName}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        ID: {p.tenantId}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Select which company portals this user is allowed to access
+              </p>
+            </div>
+          )}
+
+          {/* Custom Permissions Section */}
+          {formData.role === "custom" && (
+            <div className="border border-border rounded-lg p-4 bg-muted/30">
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Configure Access Rights
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {availablePermissions.map((permission) => (
+                  <label
+                    key={permission.key}
+                    className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-background transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.customPermissions[permission.key]}
+                      onChange={() => togglePermission(permission.key)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+                    />
+                    <span className="text-sm text-foreground">
+                      {permission.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Select the modules this user can access
+              </p>
+            </div>
+          )}
+
+          {/* Role Information */}
+          {formData.role === "admin" && !editingUser && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800">
+                <strong>Admin Role:</strong> Full access to their own portal
+                with isolated data. Each admin manages their own company portal
+                independently.
+              </p>
+            </div>
+          )}
+
+          {formData.role === "admin" && editingUser && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800">
+                <strong>Admin Role:</strong> Full access to all system features,
+                including user management and system settings.
+              </p>
+            </div>
+          )}
+
+          {formData.role === "operator" && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Operator Role:</strong> Can perform data entry and
+                manage projects, customers, suppliers, sales, purchases, and
+                payments. Cannot access reports or user management.
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting
+                ? "Saving..."
+                : editingUser
+                ? "Update User"
+                : "Create User"}
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              disabled={submitting}
+              className="flex-1 bg-muted text-foreground py-2 rounded-lg hover:bg-muted/80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((u) => (
+              <TableRow key={u._id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                      <FiUser className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">
+                      {u.name}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold w-fit border shadow-xs ${getRoleBadgeColor(
+                        u.role
+                      )}`}
+                    >
+                      {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                    </span>
+                    {u.role === "custom" && u.customPermissions && (
+                      <span className="text-xs text-muted-foreground">
+                        {
+                          Object.values(u.customPermissions).filter(
+                            (v) => v === true
+                          ).length
+                        }{" "}
+                        permissions
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <button
+                    onClick={() => toggleUserStatus(u._id)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border shadow-xs cursor-pointer ${
+                      u.isActive
+                        ? "bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {u.isActive ? "Active" : "Inactive"}
+                  </button>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {new Date(u.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(u)}
+                      className="p-2 hover:bg-muted rounded-lg transition text-foreground cursor-pointer"
+                      title="Edit user"
+                    >
+                      <FiEdit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => toggleUserStatus(u._id)}
+                      className={`p-2 hover:bg-muted rounded-lg transition cursor-pointer ${
+                        u.isActive ? "text-orange-500" : "text-green-500"
+                      }`}
+                      title={
+                        u.isActive ? "Deactivate user" : "Activate user"
+                      }
+                    >
+                      <FiUserX className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(u._id)}
+                      className="p-2 hover:bg-red-500/10 rounded-lg transition text-red-500 cursor-pointer"
+                      title="Delete user"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {users.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">
+          <FiUser className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No users found. Add your first user to get started.</p>
+        </div>
+      )}
+    </div>
+  );
+}
