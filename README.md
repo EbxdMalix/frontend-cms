@@ -333,7 +333,7 @@ This project is private and proprietary.
 
 ## 👥 Author
 
-- GitHub: [@malikcancode](https://github.com/malikcancode)
+- GitHub: [@EbxdMalix](https://github.com/EbxdMalix)
 
 ## 🐛 Known Issues
 
