@@ -7,6 +7,10 @@ import { customerApi } from "../../api/customerApi";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import { AuthContext } from "../../context/AuthContext";
 import Loader from "./Loader";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Select } from "../../components/ui/select";
+import { showToast } from "../../lib/toast";
 
 export default function Customers() {
   const { user } = useContext(AuthContext);
@@ -76,7 +80,7 @@ export default function Customers() {
 
         const response = await requestApprovalApi.createRequest(requestData);
         if (response.success) {
-          alert(
+          showToast.success(
             "Your request has been submitted to the admin for approval. You can view the status in 'My Requests' section."
           );
           setFormData({
@@ -173,70 +177,62 @@ export default function Customers() {
       >
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
+            <Input
               type="text"
               placeholder="Customer Code (e.g., CUST001)"
               value={formData.code}
               onChange={(e) =>
                 setFormData({ ...formData, code: e.target.value.toUpperCase() })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
               disabled={editingCustomer !== null}
             />
-            <input
+            <Input
               type="text"
               placeholder="Customer Name"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="email"
               placeholder="Email"
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="tel"
               placeholder="Phone"
               value={formData.phone}
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="text"
               placeholder="Address"
               value={formData.address}
               onChange={(e) =>
                 setFormData({ ...formData, address: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground md:col-span-2"
               required
+              className="md:col-span-2"
             />
           </div>
           <div className="flex gap-4">
-            <button
-              type="submit"
-              className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-medium"
-              disabled={loading}
-            >
+            <Button type="submit" disabled={loading} className="flex-1">
               {loading
                 ? "Saving..."
                 : editingCustomer
                 ? "Update Customer"
                 : "Save Customer"}
-            </button>
+            </Button>
             <button
               type="button"
               onClick={handleCloseForm}

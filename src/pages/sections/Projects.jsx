@@ -12,6 +12,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { Checkbox } from "../../components/ui/checkbox";
+import { Badge } from "../../components/ui/badge";
 import {
   Table,
   TableHeader,
@@ -20,6 +21,7 @@ import {
   TableHead,
   TableCell,
 } from "../../components/ui/table";
+import { showToast } from "../../lib/toast";
 
 export default function Projects() {
   const { user } = useContext(AuthContext);
@@ -97,7 +99,7 @@ export default function Projects() {
         if (response.success) {
           await fetchProjects();
           resetForm();
-          alert(
+          showToast.success(
             response.message ||
               `Project ${editingProject ? "updated" : "created"} successfully`
           );
@@ -114,13 +116,13 @@ export default function Projects() {
 
         if (response.success) {
           resetForm();
-          alert(
+          showToast.success(
             "Your request has been submitted to the admin for approval. You can view the status in 'My Requests' section."
           );
         }
       }
     } catch (err) {
-      alert(
+      showToast.error(
         err.message ||
           `Failed to ${editingProject ? "update" : "create"} project`
       );
@@ -194,10 +196,10 @@ export default function Projects() {
       const response = await projectApi.delete(id);
       if (response.success) {
         await fetchProjects();
-        alert(response.message || "Project deleted successfully");
+        showToast.success(response.message || "Project deleted successfully");
       }
     } catch (err) {
-      alert(err.message || "Failed to delete project");
+      showToast.error(err.message || "Failed to delete project");
       console.error("Error deleting project:", err);
     } finally {
       setLoading(false);
@@ -273,14 +275,13 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Project Name <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="Project Name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
                 required
               />
             </div>
@@ -290,12 +291,11 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Select Customer <span className="text-red-500">*</span>
               </label>
-              <select
+              <Select
                 value={
                   customers.find((c) => c.name === formData.client)?._id || ""
                 }
                 onChange={handleCustomerChange}
-                className="w-full px-4 py-2 border rounded-lg bg-background text-foreground"
                 required
                 disabled={editingProject !== null}
               >
@@ -305,7 +305,7 @@ export default function Projects() {
                     {customer.code} - {customer.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Customer Name (Read-only) */}
@@ -313,10 +313,10 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Customer Name
               </label>
-              <input
+              <Input
                 type="text"
                 value={formData.client}
-                className="w-full px-4 py-2 border rounded-lg bg-muted"
+                className="bg-muted"
                 readOnly
               />
             </div>
@@ -326,10 +326,10 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Customer Telephone
               </label>
-              <input
+              <Input
                 type="text"
                 value={formData.telephone}
-                className="w-full px-4 py-2 border rounded-lg bg-muted"
+                className="bg-muted"
                 readOnly
               />
             </div>
@@ -339,10 +339,10 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Customer Address
               </label>
-              <input
+              <Input
                 type="text"
                 value={formData.address}
-                className="w-full px-4 py-2 border rounded-lg bg-muted"
+                className="bg-muted"
                 readOnly
               />
             </div>
@@ -352,10 +352,10 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Customer Code
               </label>
-              <input
+              <Input
                 type="text"
                 value={formData.code}
-                className="w-full px-4 py-2 border rounded-lg bg-muted"
+                className="bg-muted"
                 readOnly
               />
             </div>
@@ -365,14 +365,13 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Project No
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="Project No"
                 value={formData.projectNo}
                 onChange={(e) =>
                   setFormData({ ...formData, projectNo: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
 
@@ -381,7 +380,7 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Project Description
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="Project Description"
                 value={formData.projectDescription}
@@ -391,75 +390,70 @@ export default function Projects() {
                     projectDescription: e.target.value,
                   })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
 
             {/* Order No */}
-            {/* 
+            {/*
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
                 Order No
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="Order No"
                 value={formData.orderNo}
                 onChange={(e) =>
                   setFormData({ ...formData, orderNo: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
             */}
 
             {/* Order Date */}
-            {/* 
+            {/*
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
                 Order Date
               </label>
-              <input
+              <Input
                 type="date"
                 value={formData.orderDate}
                 onChange={(e) =>
                   setFormData({ ...formData, orderDate: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
             */}
 
             {/* Expiry Date */}
-            {/* 
+            {/*
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
                 Expiry Date
               </label>
-              <input
+              <Input
                 type="date"
                 value={formData.expiryDate}
                 onChange={(e) =>
                   setFormData({ ...formData, expiryDate: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
             */}
 
             {/* Delivery Date */}
-            {/* 
+            {/*
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
                 Delivery Date
               </label>
-              <input
+              <Input
                 type="date"
                 value={formData.deliveryDate}
                 onChange={(e) =>
                   setFormData({ ...formData, deliveryDate: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
             */}
@@ -469,14 +463,13 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Value of Project
               </label>
-              <input
+              <Input
                 type="number"
                 placeholder="Value of Project"
                 value={formData.valueOfProject}
                 onChange={(e) =>
                   setFormData({ ...formData, valueOfProject: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
 
@@ -484,16 +477,14 @@ export default function Projects() {
             {editingProject && (
               <div className="flex items-center pt-7">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={formData.projectCompleted}
-                    onChange={(e) =>
+                    onCheckedChange={(c) =>
                       setFormData({
                         ...formData,
-                        projectCompleted: e.target.checked,
+                        projectCompleted: !!c,
                       })
                     }
-                    className="w-4 h-4"
                   />
                   <span className="text-sm font-medium text-foreground">
                     Project Completed
@@ -507,13 +498,12 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Start Date <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="date"
                 value={formData.startDate}
                 onChange={(e) =>
                   setFormData({ ...formData, startDate: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
                 required
               />
             </div>
@@ -523,13 +513,12 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Completion Date <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="date"
                 value={formData.completionDate}
                 onChange={(e) =>
                   setFormData({ ...formData, completionDate: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
                 required
               />
             </div>
@@ -539,14 +528,13 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Estimated Cost <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="number"
                 placeholder="Estimated Cost"
                 value={formData.estimatedCost}
                 onChange={(e) =>
                   setFormData({ ...formData, estimatedCost: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
                 required
               />
             </div>
@@ -556,31 +544,30 @@ export default function Projects() {
               <label className="block text-sm font-medium text-foreground mb-1">
                 Project Incharge <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="Project Incharge"
                 value={formData.projectIncharge}
                 onChange={(e) =>
                   setFormData({ ...formData, projectIncharge: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
                 required
               />
             </div>
           </div>
 
           <div className="flex gap-4">
-            <button
+            <Button
               type="submit"
-              className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-medium"
               disabled={loading}
+              className="flex-1"
             >
               {loading
                 ? "Saving..."
                 : editingProject
                 ? "Update Project"
                 : "Save Project"}
-            </button>
+            </Button>
             <button
               type="button"
               onClick={resetForm}
@@ -635,19 +622,19 @@ export default function Projects() {
                     {project.projectIncharge || project.jobIncharge}
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold shadow-xs border ${
+                    <Badge
+                      variant={
                         project.status === "Active"
-                          ? "bg-green-500/10 border-green-500/20 text-green-400"
+                          ? "success"
                           : project.status === "Completed"
-                          ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                          ? "info"
                           : project.status === "On Hold"
-                          ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                          ? "warning"
+                          : "default"
+                      }
                     >
                       {project.status}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell className="flex gap-2">
                     <button

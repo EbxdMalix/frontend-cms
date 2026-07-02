@@ -5,6 +5,7 @@ import { FiClock, FiCheck, FiX, FiCalendar, FiTrash2 } from "react-icons/fi";
 import Modal from "../../components/Modal";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import Loader from "./Loader";
+import { showToast } from "../../lib/toast";
 import {
   Table,
   TableHeader,
@@ -53,11 +54,11 @@ export default function MyRequests() {
       setLoading(true);
       const response = await requestApprovalApi.deleteRequest(requestId);
       if (response.success) {
-        alert(response.message || "Request deleted successfully");
+        showToast.success(response.message || "Request deleted successfully");;
         await fetchMyRequests();
       }
     } catch (err) {
-      alert(err.message || "Failed to delete request");
+      showToast.error(err.message || "Failed to delete request");;
       console.error("Error deleting request:", err);
     } finally {
       setLoading(false);

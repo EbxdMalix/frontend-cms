@@ -5,6 +5,7 @@ import { FiCheck, FiX, FiClock, FiUser, FiCalendar } from "react-icons/fi";
 import Modal from "../../components/Modal";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import Loader from "./Loader";
+import { showToast } from "../../lib/toast";
 import {
   Table,
   TableHeader,
@@ -101,7 +102,7 @@ export default function AdminRequestApprovals() {
     e.preventDefault();
 
     if (responseAction === "reject" && !adminResponse.trim()) {
-      alert("Please provide a reason for rejection");
+      showToast.error("Please provide a reason for rejection");;
       return;
     }
 
@@ -119,14 +120,14 @@ export default function AdminRequestApprovals() {
             );
 
       if (response.success) {
-        alert(response.message);
+        showToast.success(response.message);
         setShowResponseModal(false);
         setAdminResponse("");
         await fetchRequests();
         await fetchStats();
       }
     } catch (err) {
-      alert(err.message || `Failed to ${responseAction} request`);
+      showToast.error(err.message || `Failed to ${responseAction} request`);
       console.error(`Error ${responseAction}ing request:`, err);
     } finally {
       setLoading(false);

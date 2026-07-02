@@ -11,6 +11,9 @@ import { supplierApi } from "../../api/supplierApi";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import { AuthContext } from "../../context/AuthContext";
 import Loader from "./Loader";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Select } from "../../components/ui/select";
 
 export default function PurchaseEntry() {
   const { user, tenant } = useContext(AuthContext);
@@ -672,44 +675,41 @@ export default function PurchaseEntry() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* ===== TOP FIELDS ===== */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input
+            <Input
               type="text"
               placeholder="Serial No"
               value={formData.serialNo}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
               required
             />
 
-            <input
+            <Input
               type="date"
               value={formData.date}
               onChange={(e) =>
                 setFormData({ ...formData, date: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
               required
             />
 
-            <input
+            <Input
               type="text"
               placeholder="Purchase Order No"
               value={formData.purchaseOrderNo}
               onChange={(e) =>
                 setFormData({ ...formData, purchaseOrderNo: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
               required
             />
 
-            <input
+            <Input
               type="text"
               placeholder="Vendor Invoice No"
               value={formData.vendorInvoiceNo}
               onChange={(e) =>
                 setFormData({ ...formData, vendorInvoiceNo: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
               required
             />
           </div>
@@ -717,9 +717,9 @@ export default function PurchaseEntry() {
           {/* ===== VENDOR SECTION ===== */}
           <h2 className="text-lg font-semibold mt-4">Vendor Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <select
+            <Select
               onChange={handleSupplierSelect}
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2 md:col-span-4"
+              className="md:col-span-4"
             >
               <option value="">Select Vendor/Supplier</option>
               {suppliers
@@ -729,61 +729,59 @@ export default function PurchaseEntry() {
                     {supplier.name} - {supplier.code} ({supplier.company})
                   </option>
                 ))}
-            </select>
+            </Select>
 
-            <input
+            <Input
               type="text"
               placeholder="Vendor Code"
               value={formData.vendorCode}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
             />
 
-            <input
+            <Input
               type="text"
               placeholder="Vendor Name"
               value={formData.vendorName}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
               required
             />
 
-            <input
+            <Input
               type="text"
               placeholder="Address"
               value={formData.vendorAddress}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
             />
 
-            <input
+            <Input
               type="text"
               placeholder="Telephone"
               value={formData.vendorPhone}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
             />
           </div>
 
           {/* ===== INVENTORY INFO ===== */}
           <h2 className="text-lg font-semibold mt-4">Inventory Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
+            <Input
               type="text"
               placeholder="Inventory Location"
               value={formData.inventoryLocation}
               onChange={(e) =>
                 setFormData({ ...formData, inventoryLocation: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
             />
 
-            <select
+            <Select
               value={formData.project}
               onChange={(e) =>
                 setFormData({ ...formData, project: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
             >
               <option value="">Select Project/Job</option>
               {projects.map((proj) => (
@@ -791,14 +789,13 @@ export default function PurchaseEntry() {
                   {proj.name} - {proj.code}
                 </option>
               ))}
-            </select>
+            </Select>
 
-            <select
+            <Select
               value={formData.employeeReference}
               onChange={(e) =>
                 setFormData({ ...formData, employeeReference: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
             >
               <option value="">Select Employee Reference</option>
               {employees.map((emp) => (
@@ -806,16 +803,16 @@ export default function PurchaseEntry() {
                   {emp.name} - {emp.email}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* ===== ITEM ENTRY FORM ===== */}
           <h2 className="text-lg font-semibold mt-4">Item Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select
+            <Select
               value={formData.item}
               onChange={handleItemSelect}
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2 md:col-span-2"
+              className="md:col-span-2"
               required
             >
               <option value="">Select Item from Inventory</option>
@@ -824,22 +821,22 @@ export default function PurchaseEntry() {
                   {item.name} - {item.itemCode} ({item.categoryName})
                 </option>
               ))}
-            </select>
+            </Select>
 
-            <input
+            <Input
               type="text"
               placeholder="Item Code"
               value={formData.itemCode}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
             />
 
-            <input
+            <Input
               type="text"
               placeholder="Item Name"
               value={formData.itemName}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
             />
 
             <textarea
@@ -852,14 +849,13 @@ export default function PurchaseEntry() {
             />
 
             <div>
-              <input
+              <Input
                 type="number"
                 placeholder="Quantity"
                 value={formData.quantity}
                 onChange={(e) =>
                   setFormData({ ...formData, quantity: e.target.value })
                 }
-                className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2 w-full"
                 required
               />
               {formData.item && (
@@ -869,60 +865,55 @@ export default function PurchaseEntry() {
               )}
             </div>
 
-            <input
+            <Input
               type="text"
               placeholder="Unit"
               value={formData.unit}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
             />
 
-            <input
+            <Input
               type="number"
               placeholder="Rate"
               value={formData.rate}
               onChange={(e) =>
                 setFormData({ ...formData, rate: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
               required
             />
 
-            <input
+            <Input
               type="number"
               placeholder="Gross Amount (Auto-calculated)"
               value={formData.grossAmount}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed"
+              className="bg-muted cursor-not-allowed"
             />
 
-            <input
+            <Input
               type="number"
               placeholder="Discount"
               value={formData.discount}
               onChange={(e) =>
                 setFormData({ ...formData, discount: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:ring-primary focus:ring-2"
             />
 
-            <input
+            <Input
               type="number"
               placeholder="Net Amount (Auto-calculated)"
               value={formData.netAmount}
               readOnly
-              className="px-4 py-2 border border-border rounded-lg bg-muted cursor-not-allowed md:col-span-2"
+              className="bg-muted cursor-not-allowed md:col-span-2"
             />
           </div>
 
           {/* ===== BUTTONS ===== */}
           <div className="flex gap-4 pt-2">
-            <button
-              type="submit"
-              className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-medium"
-            >
+            <Button type="submit" className="flex-1">
               Save Purchase
-            </button>
+            </Button>
 
             <button
               type="button"

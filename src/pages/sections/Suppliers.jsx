@@ -7,6 +7,10 @@ import { supplierApi } from "../../api/supplierApi";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import { AuthContext } from "../../context/AuthContext";
 import Loader from "./Loader";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Select } from "../../components/ui/select";
+import { Badge } from "../../components/ui/badge";
 
 export default function Suppliers() {
   const { user } = useContext(AuthContext);
@@ -224,111 +228,98 @@ export default function Suppliers() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
+            <Input
               type="text"
               placeholder="Supplier Code *"
               value={formData.code}
               onChange={(e) =>
                 setFormData({ ...formData, code: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="text"
               placeholder="Supplier Name *"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="email"
               placeholder="Email *"
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="tel"
               placeholder="Phone *"
               value={formData.phone}
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="text"
               placeholder="Company Name *"
               value={formData.company}
               onChange={(e) =>
                 setFormData({ ...formData, company: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="text"
               placeholder="Category *"
               value={formData.category}
               onChange={(e) =>
                 setFormData({ ...formData, category: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
-            <input
+            <Input
               type="text"
               placeholder="Address"
               value={formData.address}
               onChange={(e) =>
                 setFormData({ ...formData, address: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
             />
-            <input
+            <Input
               type="text"
               placeholder="City"
               value={formData.city}
               onChange={(e) =>
                 setFormData({ ...formData, city: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
             />
-            <input
+            <Input
               type="text"
               placeholder="Country"
               value={formData.country}
               onChange={(e) =>
                 setFormData({ ...formData, country: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
             />
-            <select
+            <Select
               value={formData.status}
               onChange={(e) =>
                 setFormData({ ...formData, status: e.target.value })
               }
-              className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-            </select>
+            </Select>
           </div>
           <div className="flex gap-4">
-            <button
-              type="submit"
-              className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-medium"
-            >
+            <Button type="submit" className="flex-1">
               {editMode ? "Update Supplier" : "Save Supplier"}
-            </button>
+            </Button>
             <button
               type="button"
               onClick={handleCloseModal}
@@ -407,15 +398,13 @@ export default function Suppliers() {
                       {supplier.category}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          supplier.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                      <Badge
+                        variant={
+                          supplier.status === "active" ? "success" : "default"
+                        }
                       >
                         {supplier.status}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 text-sm flex gap-2">
                       <button

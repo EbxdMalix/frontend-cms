@@ -5,6 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { FiLock, FiMail } from "react-icons/fi";
 import { useAuth } from "../context/useAuth";
 import { authApi } from "../api/authApi";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Button } from "../components/ui/button";
+import { Checkbox } from "../components/ui/checkbox";
+import { showToast } from "../lib/toast";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -94,16 +99,17 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <Label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                 Email
-              </label>
+              </Label>
               <div className="relative">
                 <FiMail className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground" />
-                <input
+                <Input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                  className="pl-10 pr-4"
                   placeholder="Enter your email"
                   required
                   disabled={loading}
@@ -112,16 +118,17 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <Label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
                 Password
-              </label>
+              </Label>
               <div className="relative">
                 <FiLock className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground" />
-                <input
+                <Input
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                  className="pl-10 pr-4"
                   placeholder="•••••••••"
                   required
                   disabled={loading}
@@ -130,25 +137,23 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center gap-2 mt-2">
-              <input
+              <Checkbox
                 id="autoOpenDefault"
-                type="checkbox"
                 checked={autoOpenDefault}
-                onChange={(e) => setAutoOpenDefault(e.target.checked)}
-                className="w-4 h-4 rounded border-border text-primary bg-background focus:ring-primary focus:outline-none"
+                onCheckedChange={(checked) => setAutoOpenDefault(!!checked)}
               />
               <label htmlFor="autoOpenDefault" className="text-xs text-muted-foreground cursor-pointer select-none">
                 Auto-open default workspace on login
               </label>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-6"
             >
               {loading ? "Signing In..." : "Sign In"}
-            </button>
+            </Button>
           </form>
         </div>
       </div>

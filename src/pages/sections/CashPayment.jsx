@@ -14,6 +14,7 @@ import {
 import { projectApi } from "../../api/projectApi";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import { AuthContext } from "../../context/AuthContext";
+import { showToast } from "../../lib/toast";
 
 export default function CashPayment() {
   const { user, tenant } = useContext(AuthContext);
@@ -58,7 +59,7 @@ export default function CashPayment() {
       }
     } catch (error) {
       console.error("Failed to fetch cash payments:", error);
-      alert(error.message || "Failed to fetch cash payments");
+      showToast.error(error.message || "Failed to fetch cash payments");;
     } finally {
       setLoading(false);
     }
@@ -146,7 +147,7 @@ export default function CashPayment() {
 
     // Validation
     if (paymentLines.length === 0) {
-      alert("Please add at least one payment line");
+      showToast.error("Please add at least one payment line");;
       return;
     }
 
@@ -155,7 +156,7 @@ export default function CashPayment() {
     );
 
     if (invalidLines.length > 0) {
-      alert("Please ensure all payment lines have account and valid amount");
+      showToast.error("Please ensure all payment lines have account and valid amount");;
       return;
     }
 
@@ -179,10 +180,10 @@ export default function CashPayment() {
         let response;
         if (editingPayment) {
           response = await updateCashPayment(editingPayment._id, paymentData);
-          alert("Cash payment updated successfully");
+          showToast.success("Cash payment updated successfully");
         } else {
           response = await createCashPayment(paymentData);
-          alert(
+          showToast.success(
             "Cash payment recorded successfully! Journal entry created automatically."
           );
         }
@@ -204,7 +205,7 @@ export default function CashPayment() {
 
         const response = await requestApprovalApi.createRequest(requestData);
         if (response.success) {
-          alert(
+          showToast.success(
             "Your request has been submitted to the admin for approval. You can view the status in 'My Requests' section."
           );
           setShowForm(false);
@@ -213,7 +214,7 @@ export default function CashPayment() {
       }
     } catch (error) {
       console.error("Failed to save cash payment:", error);
-      alert(error.message || "Failed to save cash payment");
+      showToast.error(error.message || "Failed to save cash payment");
     } finally {
       setLoading(false);
     }
@@ -240,11 +241,11 @@ export default function CashPayment() {
     try {
       setLoading(true);
       await deleteCashPayment(id);
-      alert("Cash payment deleted successfully");
+      showToast.success("Cash payment deleted successfully");
       fetchPayments();
     } catch (error) {
       console.error("Failed to delete cash payment:", error);
-      alert(error.message || "Failed to delete cash payment");
+      showToast.error(error.message || "Failed to delete cash payment");
     } finally {
       setLoading(false);
     }
@@ -453,7 +454,7 @@ export default function CashPayment() {
       }, 300);
     } catch (e) {
       console.error("Iframe print failed:", e);
-      alert("Printing failed. Please try again.");
+      showToast.error("Printing failed. Please try again.");
     }
   };
 

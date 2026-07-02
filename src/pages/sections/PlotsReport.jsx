@@ -16,6 +16,7 @@ import {
   FiBarChart2,
 } from "react-icons/fi";
 import Loader from "./Loader";
+import { showToast } from "../../lib/toast";
 
 export default function PlotsReport() {
   const { tenant } = useContext(AuthContext);
@@ -108,7 +109,7 @@ export default function PlotsReport() {
 
   const exportToPDF = () => {
     if (!reportData || reportData.length === 0) {
-      alert("No data to export");
+      showToast.info("No data to export");
       return;
     }
 

@@ -18,6 +18,7 @@ import { projectApi } from "../../api/projectApi";
 import { userApi } from "../../api/userApi";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import { AuthContext } from "../../context/AuthContext";
+import { showToast } from "../../lib/toast";
 
 export default function BankPayment() {
   const { user, tenant } = useContext(AuthContext);
@@ -188,7 +189,7 @@ export default function BankPayment() {
 
         const response = await requestApprovalApi.createRequest(requestData);
         if (response.success) {
-          alert(
+          showToast.success(
             "Your request has been submitted to the admin for approval. You can view the status in 'My Requests' section."
           );
           handleCloseModal();
@@ -198,7 +199,7 @@ export default function BankPayment() {
     } catch (err) {
       console.error("Error saving payment:", err);
       setError(err.message || "Failed to save payment");
-      alert(err.message || "Failed to save payment");
+      showToast.error(err.message || "Failed to save payment");;
     } finally {
       setLoading(false);
     }
@@ -239,7 +240,7 @@ export default function BankPayment() {
     } catch (err) {
       console.error("Error deleting payment:", err);
       setError(err.message || "Failed to delete payment");
-      alert(err.message || "Failed to delete payment");
+      showToast.error(err.message || "Failed to delete payment");;
     } finally {
       setLoading(false);
     }
@@ -275,7 +276,7 @@ export default function BankPayment() {
       // Create a new window for printing
       const printWindow = window.open("", "_blank");
       if (!printWindow) {
-        alert("Please allow pop-ups to print the payment voucher");
+        showToast.error("Please allow pop-ups to print the payment voucher");;
         return;
       }
 
@@ -553,7 +554,7 @@ export default function BankPayment() {
       printWindow.document.close();
     } catch (err) {
       console.error("Error printing payment:", err);
-      alert("Failed to generate print view. Please try again.");
+      showToast.error("Failed to generate print view. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -8,10 +8,14 @@ import { tenantApi } from "../../api/tenantApi";
 import { requestApprovalApi } from "../../api/requestApprovalApi";
 import { AuthContext } from "../../context/AuthContext";
 import Loader from "./Loader";
+import { showToast } from "../../lib/toast";
+import { Button } from "../../components/ui/button";
+import Loader from "./Loader";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { Checkbox } from "../../components/ui/checkbox";
+import { showToast } from "../../lib/toast";
 import {
   Table,
   TableHeader,
@@ -133,7 +137,7 @@ export default function Users() {
         });
 
         if (tenantResponse.success) {
-          alert(
+          showToast.success(
             `Portal "${formData.portalName}" created successfully! Admin can now login.`
           );
           await fetchUsers();
@@ -194,7 +198,7 @@ export default function Users() {
 
           const response = await requestApprovalApi.createRequest(requestData);
           if (response.success) {
-            alert(
+            showToast.success(
               "Your request has been submitted to the admin for approval. You can view the status in 'My Requests' section."
             );
             resetForm();

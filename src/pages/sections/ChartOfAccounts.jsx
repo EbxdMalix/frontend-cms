@@ -11,6 +11,7 @@ import {
 } from "../../api/chartOfAccountApi";
 import accountTypeApi from "../../api/accountTypeApi";
 import Loader from "./Loader";
+import { showToast } from "../../lib/toast";
 
 export default function ChartOfAccounts() {
   const [accounts, setAccounts] = useState([]);
@@ -185,7 +186,7 @@ export default function ChartOfAccounts() {
     } catch (err) {
       console.error("Error saving account:", err);
       setError(err.message || "Failed to save account");
-      alert(err.message || "Failed to save account");
+      showToast.error(err.message || "Failed to save account");
     } finally {
       setLoading(false);
     }
@@ -222,7 +223,7 @@ export default function ChartOfAccounts() {
     } catch (err) {
       console.error("Error deleting account:", err);
       setError(err.message || "Failed to delete account");
-      alert(err.message || "Failed to delete account");
+      showToast.error(err.message || "Failed to delete account");
     } finally {
       setLoading(false);
     }
@@ -249,11 +250,11 @@ export default function ChartOfAccounts() {
       await fetchAccountTypes();
 
       // Show success message
-      alert("Account type created successfully!");
+      showToast.success("Account type created successfully!");
     } catch (err) {
       console.error("Error creating account type:", err);
       setError(err.message || "Failed to create account type");
-      alert(err.message || "Failed to create account type");
+      showToast.error(err.message || "Failed to create account type");
     } finally {
       setLoading(false);
     }

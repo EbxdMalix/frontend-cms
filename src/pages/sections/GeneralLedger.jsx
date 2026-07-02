@@ -4,6 +4,7 @@ import { AuthContext } from "../../context/AuthContext";
 import generalLedgerApi from "../../api/generalLedgerApi";
 import chartOfAccountApi from "../../api/chartOfAccountApi";
 import Loader from "./Loader";
+import { showToast } from "../../lib/toast";
 
 export default function GeneralLedger() {
   const { tenant } = useContext(AuthContext);
@@ -66,7 +67,7 @@ export default function GeneralLedger() {
 
   const handleExportPDF = () => {
     if (ledger.length === 0) {
-      alert("No data to export");
+      showToast.info("No data to export");
       return;
     }
 
