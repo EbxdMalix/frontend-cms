@@ -10,12 +10,9 @@ import { AuthContext } from "../../context/AuthContext";
 import Loader from "./Loader";
 import { showToast } from "../../lib/toast";
 import { Button } from "../../components/ui/button";
-import Loader from "./Loader";
-import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { Checkbox } from "../../components/ui/checkbox";
-import { showToast } from "../../lib/toast";
 import {
   Table,
   TableHeader,
